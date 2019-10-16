@@ -10,6 +10,17 @@ import { useActivities } from '../hooks/useActivities'
 import { activities } from '../../config/activities'
 import { useOpt } from '../hooks/useOpt'
 
+const rowsAndCols = (num: number) => {
+  const sqrt = Math.sqrt(num)
+  const ceil = Math.ceil(sqrt)
+  const floor = Math.floor(sqrt)
+  const ceilByFloor = ceil * floor
+  return ceilByFloor < num ? [ceil, ceil] : [floor, ceil]
+}
+
+const factors = number =>
+  Array.from(Array(number + 1), (_, i) => i).filter(i => number % i === 0)
+
 interface Props {
   x: number
   y: number
@@ -20,13 +31,12 @@ export const Picker: React.FC<Props> = ({ x, y, isVisible }) => {
   const [activityNames, favName] = useActivities()
   const isOptHeld = useOpt()
 
-  const numOfNonFavActs = activityNames.length
   const fAdjust = favName ? 1 : 0
+  const [rows, cols] = rowsAndCols(activityNames.length + fAdjust)
 
-  const width = 200 * fAdjust + Math.min(numOfNonFavActs, 3 - fAdjust) * 100
+  const width = cols * 100
 
-  const height =
-    200 * fAdjust + (Math.ceil(numOfNonFavActs / (3 + fAdjust)) - fAdjust) * 100
+  const height = rows * 100
 
   const [isAtRight, isAtBottom] = [
     x > window.innerWidth - width,
@@ -76,7 +86,6 @@ export const Picker: React.FC<Props> = ({ x, y, isVisible }) => {
                 ipcRenderer.send(ACTIVITY_RUN, favName)
               }
             }}
-            size={200}
             float={activityFloat}
             transform={activityTransform}
             opacity={isOptHeld && !activities[favName].optCmd ? 0.5 : 1}
